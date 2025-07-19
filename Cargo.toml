@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "backend_logic",
+    "lambda",
+    "server",
+]
+resolver = "3"
