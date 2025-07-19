@@ -24,7 +24,6 @@ jobs:
           if ! cargo lambda -v
           then
           cargo install cargo-lambda
-          npm install -g @ziglang/cli
           fi
 
       - name: Cache Cargo registry
@@ -38,6 +37,7 @@ jobs:
 
       - name: Build Lambda
         run: |
+          npm install -g @ziglang/cli
           cd lambda/
           cargo lambda build --release
 
