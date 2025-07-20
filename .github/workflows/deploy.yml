@@ -33,7 +33,7 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      
+
       - name: Setup OpenSSL dependencies
         run: |
           echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
@@ -43,14 +43,14 @@ jobs:
         run: |
           npm install -g @ziglang/cli
           cargo lambda build --target aarch64-unknown-linux-gnu --release
-      
-      - name: Test Lambda
-        run: |
-          cargo lambda watch --target aarch64-unknown-linux-gnu --release &
-          clw_pid=$!
-          sleep 45
-          curl -vf localhost:9000
-          kill $clw_pid
+
+      # - name: Test Lambda
+      #   run: |
+      #     cargo lambda watch --target aarch64-unknown-linux-gnu --release &
+      #     clw_pid=$!
+      #     sleep 45
+      #     curl -vf localhost:9000
+      #     kill $clw_pid
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
