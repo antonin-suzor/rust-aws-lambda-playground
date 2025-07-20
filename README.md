@@ -13,4 +13,5 @@ A place for me to experiment with Rust AWS Lambdas
   - `cargo lambda watch` or `cargo lambda watch --release`
   - `curl -v localhost:9000`
 - Deploy manually:
+  - `cargo lambda build --release`
   - `cargo lambda deploy --binary-name rust_aws_lambda lambda_name --enable-function-url`
