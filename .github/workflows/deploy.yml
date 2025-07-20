@@ -1,7 +1,9 @@
 name: Build Lambda
 
 on:
-  push
+  push:
+    branches:
+      - main
 
 jobs:
   build-lambda:
@@ -44,14 +46,6 @@ jobs:
           npm install -g @ziglang/cli
           cargo lambda build --target aarch64-unknown-linux-gnu --release
 
-      # - name: Test Lambda
-      #   run: |
-      #     cargo lambda watch --target aarch64-unknown-linux-gnu --release &
-      #     clw_pid=$!
-      #     sleep 45
-      #     curl -vf localhost:9000
-      #     kill $clw_pid
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -61,4 +55,4 @@ jobs:
 
       - name: Deploy Lambda to AWS
         run: |
-          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url
+          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url --description $(git log -1 --oneline)
