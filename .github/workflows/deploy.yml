@@ -1,8 +1,7 @@
 name: Build Lambda
 
 on:
-  push:
-    branches: [main]
+  push
 
 jobs:
   build-lambda:
@@ -12,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache Cargo-lambda
+      - name: Cache cargo-lambda
         uses: actions/cache@v4
         with:
           path: |
@@ -21,7 +20,7 @@ jobs:
 
       - name: Install cargo-lambda if not exists
         run: |
-          if ! cargo lambda -v
+          if ! cargo lambda --version
           then
           cargo install cargo-lambda
           fi
@@ -38,7 +37,6 @@ jobs:
       - name: Build Lambda
         run: |
           npm install -g @ziglang/cli
-          cd lambda/
           cargo lambda build --release
 
       - name: Configure AWS Credentials
@@ -48,6 +46,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Deploy to Lambda
+      - name: Deploy Lambda to AWS
         run: |
-          cargo lambda deploy lambda --iam-role ${{ secrets.IAM_ROLE_CARGO_LAMBDA }}
+          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url

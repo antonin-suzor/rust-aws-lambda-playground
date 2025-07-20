@@ -5,6 +5,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use lambda_http::{run, tracing, Error};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
@@ -43,11 +44,17 @@ async fn health_check() -> (StatusCode, String) {
     }
 }
 
-pub fn get_axum_app() -> Router {
+fn get_axum_app() -> Router {
     Router::new()
         .route("/", get(root))
         .route("/foo", get(get_foo).post(post_foo))
         .route("/foo/{name}", post(post_foo_name))
         .route("/parameters", get(get_parameters))
         .route("/health", get(health_check))
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    tracing::init_default_subscriber();
+    run(get_axum_app()).await
 }
