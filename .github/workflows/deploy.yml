@@ -55,4 +55,4 @@ jobs:
 
       - name: Deploy Lambda to AWS
         run: |
-          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url --description $(git log -1 --oneline)
+          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
