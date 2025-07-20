@@ -48,6 +48,7 @@ jobs:
         run: |
           cargo lambda watch --release &
           clw_pid=$!
+          sleep 5
           curl -vf localhost:9000
           kill $clw_pid
 
