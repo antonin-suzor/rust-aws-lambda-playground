@@ -8,6 +8,9 @@ use axum::{
 use lambda_http::{run, tracing, Error};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use sqlx::PgPool;
+
+mod todos;
 
 #[derive(Deserialize, Serialize)]
 pub struct Params {
@@ -44,17 +47,24 @@ async fn health_check() -> (StatusCode, String) {
     }
 }
 
-fn get_axum_app() -> Router {
-    Router::new()
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    tracing::init_default_subscriber();
+
+    let _ = dotenvy::dotenv();
+    env_logger::init(); // useless for now
+
+    let db_pool = PgPool::connect(std::env::var("DATABASE_URL").expect("Env var `DATABASE_URL` should be set").as_str())
+        .await
+        .expect("Connection to database should not fail");
+
+    let app = Router::new()
         .route("/", get(root))
         .route("/foo", get(get_foo).post(post_foo))
         .route("/foo/{name}", post(post_foo_name))
         .route("/parameters", get(get_parameters))
         .route("/health", get(health_check))
-}
-
-#[tokio::main]
-async fn main() -> Result<(), Error> {
-    tracing::init_default_subscriber();
-    run(get_axum_app()).await
+        .nest("/api/todos", todos::get_todos_router().with_state(db_pool));
+    
+    run(app).await
 }
