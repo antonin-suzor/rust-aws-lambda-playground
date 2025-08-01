@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: rust_aws_lambda-postgres
+    restart: on-failure
+    environment:
+      POSTGRES_INITDB_ARGS: --auth=scram-sha-256
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_DB: root_dbn
+      POSTGRES_USER: root_usr
+      POSTGRES_PASSWORD: root_pwd
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 3s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres-data:
+    driver: local
+    name: rust_aws_lambda-postgres-data

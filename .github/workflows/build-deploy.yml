@@ -1,31 +1,21 @@
-name: Build Lambda
+name: Build and Deploy Lambda
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  build-lambda:
+  build-and-deploy-lambda:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache cargo-lambda
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/cargo-lambda
-          key: expect-no-change
-
-      - name: Install cargo-lambda if not exists
-        run: |
-          if ! cargo lambda --version
-          then
-          cargo install cargo-lambda
-          fi
+      - name: Get Utility Executables
+        uses: ./.github/actions/get-util-execs
 
       - name: Cache Cargo registry
         uses: actions/cache@v4
@@ -35,6 +25,8 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo
 
       - name: Setup OpenSSL dependencies
         run: |
@@ -55,4 +47,4 @@ jobs:
 
       - name: Deploy Lambda to AWS
         run: |
-          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
+          cargo lambda deploy --include certs --binary-name rust_aws_lambda lambda --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"

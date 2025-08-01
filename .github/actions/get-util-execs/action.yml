@@ -1,0 +1,32 @@
+name: Get Utility Executables
+
+description: Provides utility executables for the project
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Cache utility executables
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/cargo-lambda
+          ~/.cargo/bin/sqlx
+        key: util_exec_cargo-lamba_sqlx
+        restore-keys: |
+          util_exec
+
+    - name: Install utility executables if necessary
+      shell: bash
+      run: |
+        if ! cargo lambda --version
+        then
+        cargo install cargo-lambda
+        fi
+        if ! sqlx --version
+        then
+        cargo install sqlx-cli
+        fi
