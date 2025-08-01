@@ -2,6 +2,8 @@ name: Build and Deploy Lambda
 
 on:
   push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -12,7 +14,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: ./.github/actions/get-util-execs
+      - name: Get Utility Executables
+        uses: ./.github/actions/get-util-execs
 
       - name: Cache Cargo registry
         uses: actions/cache@v4

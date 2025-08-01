@@ -1,9 +1,6 @@
-name: Migrate to Latest Version of DB
+name: Undo Latest DB Migration
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -23,4 +20,4 @@ jobs:
       
       - name: Migrate DB to Latest Version
         run: |
-          sqlx migrate run --no-dotenv --source migrations --database-url ${{ secrets.DATABASE_URL }}
+          sqlx migrate revert --no-dotenv --source migrations --database-url ${{ secrets.DATABASE_URL }}
