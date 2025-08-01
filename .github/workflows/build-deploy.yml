@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - uses: ./.github/workflows/get-util-execs.yml
+      - uses: ./.github/actions/get-util-execs
 
       - name: Cache Cargo registry
         uses: actions/cache@v4
