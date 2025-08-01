@@ -18,6 +18,8 @@ jobs:
             ~/.cargo/bin/cargo-lambda
             ~/.cargo/bin/sqlx
           key: util_exec_cargo-lamba_sqlx
+          restore-keys: |
+            util_exec
 
       - name: Install utility executables if not exists
         run: |

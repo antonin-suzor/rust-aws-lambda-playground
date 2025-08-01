@@ -2,6 +2,12 @@
 name = "rust_aws_lambda"
 version = "0.1.0"
 edition = "2024"
+include = [
+  "src/**",
+  "Cargo.toml",
+  "Cargo.lock",
+  "certs/eu-north-1-bundle.pem"
+]
 
 [dependencies]
 axum = "0.8"
