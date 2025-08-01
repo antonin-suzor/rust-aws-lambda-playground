@@ -2,6 +2,7 @@ name: Build and Deploy Lambda
 
 on:
   push:
+  workflow_dispatch:
 
 jobs:
   build-and-deploy-lambda:
@@ -21,7 +22,7 @@ jobs:
           restore-keys: |
             util_exec
 
-      - name: Install utility executables if not exists
+      - name: Install utility executables if necessary
         run: |
           if ! cargo lambda --version
           then
