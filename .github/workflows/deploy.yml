@@ -53,6 +53,10 @@ jobs:
           npm install -g @ziglang/cli
           cargo lambda build --target aarch64-unknown-linux-gnu --release
 
+      - name: Copy Certificates into Lambda
+        run: |
+          cp certs/* target/lambda/rust_aws_lambda/
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -62,4 +66,4 @@ jobs:
 
       - name: Deploy Lambda to AWS
         run: |
-          cargo lambda deploy --binary-name rust_aws_lambda lambda --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
+          cargo lambda deploy --no-build --binary-name rust_aws_lambda lambda --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
