@@ -47,7 +47,6 @@ jobs:
       - name: Prepare and Deploy AWS Lambda for Migration
         working-directory: ./migrations
         run: |
-          dos2unix bootstrap migrate.sh current_version.txt sql/*
           cp $(which sqlx) .
           chmod +x ./bootstrap
           zip lambda.zip bootstrap sqlx migrate.sh current_version.txt sql/*
