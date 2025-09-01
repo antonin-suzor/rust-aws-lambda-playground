@@ -5,10 +5,10 @@ function handler () {
     mig_version=$(cat /var/task/current_version.txt)
     echo "mig_version: $mig_version"
     echo "migrate info:"
-    sqlx migrate info --no-dotenv --source sql
+    /var/task/sqlx migrate info --no-dotenv --source sql
     echo ""
     echo "migrate run:"
-    sqlx migrate run --no-dotenv --source sql --target-version $mig_version
+    /var/task/sqlx migrate run --no-dotenv --source sql --target-version $mig_version
 }
 
 while true
