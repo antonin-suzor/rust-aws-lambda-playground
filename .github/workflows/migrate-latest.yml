@@ -15,26 +15,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache utility executables
+      - name: Cache sqlx binary for aws arm64
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/cargo-lambda
             ~/.cargo/bin/sqlx
-          key: util_exec_cargo-lambda_sqlx
-          restore-keys: |
-            util_exec
+          key: sqlx-binary-aarch64-unknown-linux-gnu
 
-      - name: Install utility executables if necessary
-        shell: bash
+      - name: Get sqlx binary
         run: |
-          if ! cargo lambda --version
+          if ! stat ~/.cargo/bin/sqlx
           then
-          cargo install cargo-lambda
-          fi
-          if ! sqlx --version
-          then
-          cargo install sqlx-cli
+          rustup target add aarch64-unknown-linux-gnu
+          echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
+          echo 'rustflags = ["-C", "target-cpu=neoverse-n1"]' >> ~/.cargo/config.toml
+          cargo install sqlx-cli --no-default-features --features rustls --target aarch64-unknown-linux-gnu
           fi
 
       - name: Configure AWS Credentials
@@ -47,7 +42,7 @@ jobs:
       - name: Prepare and Deploy AWS Lambda for Migration
         working-directory: ./migrations
         run: |
-          cp $(which sqlx) .
+          cp ~/.cargo/bin/sqlx .
           chmod +x ./bootstrap
           zip -X lambda.zip bootstrap sqlx current_version.txt sql/*
           aws lambda update-function-code --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --zip-file fileb://lambda.zip --publish &> /dev/null
