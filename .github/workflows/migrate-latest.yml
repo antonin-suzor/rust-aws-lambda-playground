@@ -1,9 +1,10 @@
-name: Migrate to Latest Version of DB
+name: Migrate to Current Configured Version of DB
 
 on:
   push:
     branches:
       - main
+      - migration_lambda
   workflow_dispatch:
 
 jobs:
@@ -17,10 +18,10 @@ jobs:
       - name: Get Utility Executables
         uses: ./.github/actions/get-util-execs
       
-      - name: Show Current Migration Version
+      - name: prepare and deploy aws lambda for migration
+        working-directory: ./migrations
         run: |
-          sqlx migrate info --no-dotenv --source migrations --database-url ${{ secrets.DATABASE_URL }}
-      
-      - name: Migrate DB to Latest Version
-        run: |
-          sqlx migrate run --no-dotenv --source migrations --database-url ${{ secrets.DATABASE_URL }}
+          cp $(which sqlx) .
+          chmod +x ./bootstrap
+          zip lambda.zip bootstrap sqlx migrate.sh current_version.txt sql/*
+          aws lambda update-function-code --function-name migrate-database-v1 --zip-file fileb://lambda.zip

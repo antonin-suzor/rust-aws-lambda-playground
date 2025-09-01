@@ -13,7 +13,7 @@ A place for me to experiment with Rust AWS Lambdas
 
 - Test the lambda locally:
   - `docker compose up -d`
-  - `echo "DATABASE_URL=postgres://root_usr:root_pwd@localhost:5432/root_dbn" >> .env
+  - `echo "DATABASE_URL=postgres://root_usr:root_pwd@localhost:5432/root_dbn" >> .env`
   - `cargo lambda watch` or `cargo lambda watch --release`
   - `curl -v localhost:9000`
 
