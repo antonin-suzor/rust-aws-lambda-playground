@@ -15,24 +15,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache sqlx binary for aws arm64
+      - name: Cache sqlx static binary for aws x86_64
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/sqlx
-          key: sqlx-binary-aarch64-unknown-linux-gnu
+          key: sqlx-static-binary-x86_64-unknown-linux-musl
 
-      - name: Install Rust for aarch64-unknown-linux-gnu
+      - name: Install Rust for x86_64-unknown-linux-musl
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-unknown-linux-gnu
+          targets: x86_64-unknown-linux-musl
 
       - name: Get sqlx binary if necessary
         run: |
           if ! stat ~/.cargo/bin/sqlx
           then
-          cargo install cross
-          cross install --target aarch64-unknown-linux-gnu sqlx-cli --no-default-features --features postgres,rustls
+          cross install --target x86_64-unknown-linux-gnu sqlx-cli --no-default-features --features postgres,rustls
+          ldd ~/.cargo/bin/sqlx
           fi
 
       - name: Configure AWS Credentials
