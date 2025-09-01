@@ -19,20 +19,21 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/sqlx
+            target/aarch64-unknown-linux-gnu/release/sqlx
           key: sqlx-binary-aarch64-unknown-linux-gnu
+
+      - name: Install Rust for aarch64-unknown-linux-gnu
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
 
       - name: Get sqlx binary if necessary
         run: |
-          if ! stat ~/.cargo/bin/sqlx
+          if ! stat target/aarch64-unknown-linux-gnu/release/sqlx
           then
-          dpkg --add-architecture aarch64
-          apt-get update
-          apt-get install x11:aarch64
-          rustup target add aarch64-unknown-linux-gnu
-          echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
-          echo 'rustflags = ["-C", "target-cpu=neoverse-n1"]' >> ~/.cargo/config.toml
-          cargo install sqlx-cli --no-default-features --features postgres,tls-rustls-aws-lc-rs --target aarch64-unknown-linux-gnu
+          cargo install cross --locked
+          cross build --release --target aarch64-unknown-linux-gnu -p sqlx-cli --no-default-features --features postgres,tls-rustls-aws-lc-rs
+          cp target/aarch64-unknown-linux-gnu/release/sqlx ~/.cargo/bin/sqlx
           fi
 
       - name: Configure AWS Credentials
@@ -45,7 +46,8 @@ jobs:
       - name: Prepare and Deploy AWS Lambda for Migration
         working-directory: ./migrations
         run: |
-          cp ~/.cargo/bin/sqlx .
+          cp ../target/aarch64-unknown-linux-gnu/release/sqlx .
+          cp -r ../certs ./
           chmod +x ./bootstrap
           zip -X lambda.zip bootstrap sqlx current_version.txt sql/*
           aws lambda update-function-code --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --zip-file fileb://lambda.zip --publish &> /dev/null
