@@ -22,14 +22,17 @@ jobs:
             ~/.cargo/bin/sqlx
           key: sqlx-binary-aarch64-unknown-linux-gnu
 
-      - name: Get sqlx binary
+      - name: Get sqlx binary if necessary
         run: |
           if ! stat ~/.cargo/bin/sqlx
           then
+          dpkg --add-architecture aarch64
+          apt-get update
+          apt-get install x11:aarch64
           rustup target add aarch64-unknown-linux-gnu
           echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
           echo 'rustflags = ["-C", "target-cpu=neoverse-n1"]' >> ~/.cargo/config.toml
-          cargo install sqlx-cli --no-default-features --features rustls --target aarch64-unknown-linux-gnu
+          cargo install sqlx-cli --no-default-features --features postgres,tls-rustls-aws-lc-rs --target aarch64-unknown-linux-gnu
           fi
 
       - name: Configure AWS Credentials
