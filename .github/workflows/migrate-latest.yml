@@ -31,7 +31,7 @@ jobs:
         run: |
           if ! stat ~/.cargo/bin/sqlx
           then
-          which x86_64-linux-musl-gcc & ls -l /usr/bin/x86_64-linux-musl-gcc
+          which x86_64-linux-musl-gcc
           cargo install --target x86_64-unknown-linux-musl sqlx-cli --no-default-features --features postgres,rustls
           ldd ~/.cargo/bin/sqlx
           fi
