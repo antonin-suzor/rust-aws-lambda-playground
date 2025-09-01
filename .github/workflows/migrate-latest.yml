@@ -17,11 +17,23 @@ jobs:
 
       - name: Get Utility Executables
         uses: ./.github/actions/get-util-execs
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
       
-      - name: prepare and deploy aws lambda for migration
+      - name: Prepare and Deploy AWS Lambda for Migration
         working-directory: ./migrations
         run: |
           cp $(which sqlx) .
           chmod +x ./bootstrap
           zip lambda.zip bootstrap sqlx migrate.sh current_version.txt sql/*
-          aws lambda update-function-code --function-name migrate-database-v1 --zip-file fileb://lambda.zip
+          aws lambda update-function-code --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --zip-file fileb://lambda.zip --publish &> /dev/null
+      
+      - name: Invoke AWS Lambda for Migration
+        run: |
+          aws lambda invoke --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} output.json &> /dev/null
+          cat output.json
