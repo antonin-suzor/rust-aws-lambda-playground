@@ -32,7 +32,7 @@ jobs:
           if ! stat target/aarch64-unknown-linux-gnu/release/sqlx
           then
           cargo install cross --locked
-          cross build --release --target aarch64-unknown-linux-gnu -p sqlx-cli --no-default-features --features postgres,tls-rustls-aws-lc-rs
+          cross build --release --target aarch64-unknown-linux-gnu -p sqlx-cli
           cp target/aarch64-unknown-linux-gnu/release/sqlx ~/.cargo/bin/sqlx
           fi
 
