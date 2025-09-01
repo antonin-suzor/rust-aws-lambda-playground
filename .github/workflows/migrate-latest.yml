@@ -19,7 +19,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            target/aarch64-unknown-linux-gnu/release/sqlx
+            ~/.cargo/bin/sqlx
           key: sqlx-binary-aarch64-unknown-linux-gnu
 
       - name: Install Rust for aarch64-unknown-linux-gnu
@@ -29,11 +29,10 @@ jobs:
 
       - name: Get sqlx binary if necessary
         run: |
-          if ! stat target/aarch64-unknown-linux-gnu/release/sqlx
+          if ! stat ~/.cargo/bin/sqlx
           then
-          cargo install cross --locked
-          cross build --release --target aarch64-unknown-linux-gnu -p sqlx-cli
-          cp target/aarch64-unknown-linux-gnu/release/sqlx ~/.cargo/bin/sqlx
+          cargo install cross
+          cross install --target aarch64-unknown-linux-gnu sqlx-cli --no-default-features --features postgres,tls-rustls-aws-lc-rs
           fi
 
       - name: Configure AWS Credentials
@@ -46,7 +45,7 @@ jobs:
       - name: Prepare and Deploy AWS Lambda for Migration
         working-directory: ./migrations
         run: |
-          cp ../target/aarch64-unknown-linux-gnu/release/sqlx .
+          cp ~/.cargo/bin/sqlx .
           cp -r ../certs ./
           chmod +x ./bootstrap
           zip -X lambda.zip bootstrap sqlx current_version.txt sql/*
