@@ -31,7 +31,7 @@ jobs:
         run: |
           if ! stat ~/.cargo/bin/sqlx
           then
-          cargo install --target x86_64-unknown-linux-gnu sqlx-cli --no-default-features --features postgres,rustls
+          cargo install --target x86_64-unknown-linux-musl sqlx-cli --no-default-features --features postgres,rustls
           ldd ~/.cargo/bin/sqlx
           fi
 
@@ -48,7 +48,7 @@ jobs:
           cp ~/.cargo/bin/sqlx .
           cp -r ../certs ./
           chmod +x ./bootstrap
-          zip -X lambda.zip bootstrap sqlx current_version.txt sql/*
+          zip -X lambda.zip bootstrap sqlx current_version.txt certs/* sql/*
           aws lambda update-function-code --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --zip-file fileb://lambda.zip --publish &> /dev/null
       
       - name: Invoke AWS Lambda for Migration
