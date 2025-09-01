@@ -31,9 +31,8 @@ jobs:
         run: |
           if ! stat ~/.cargo/bin/sqlx
           then
-          echo '[target.x86_64-unknown-linux-musl]' >> ~/.cargo/config.toml
-          echo 'linker = "musl-gcc"' >> ~/.cargo/config.toml
-          echo 'ar = "ar"' >> ~/.cargo/config.toml
+          sudo apt install musl musl-tools
+          sudo ln -s /usr/bin/musl-gcc /usr/bin/x86_64-linux-musl-gcc
           cargo install --target x86_64-unknown-linux-musl sqlx-cli --no-default-features --features postgres,rustls
           ldd ~/.cargo/bin/sqlx
           fi
