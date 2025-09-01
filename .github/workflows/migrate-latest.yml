@@ -22,6 +22,11 @@ jobs:
             ~/.cargo/bin/sqlx
           key: sqlx-binary-aarch64-unknown-linux-gnu
 
+      - name: Install Rust for aarch64-unknown-linux-gnu
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+
       - name: Get sqlx binary if necessary
         run: |
           if ! stat ~/.cargo/bin/sqlx
