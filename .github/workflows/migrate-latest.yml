@@ -49,11 +49,11 @@ jobs:
         run: |
           cp $(which sqlx) .
           chmod +x ./bootstrap
-          man zip
-          zip -X lambda.zip bootstrap sqlx migrate.sh current_version.txt sql/*
+          zip -X lambda.zip bootstrap sqlx current_version.txt sql/*
           aws lambda update-function-code --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --zip-file fileb://lambda.zip --publish &> /dev/null
       
       - name: Invoke AWS Lambda for Migration
         run: |
+          sleep 3 # wait for a few seconds to ensure the updated lambda is ready
           aws lambda invoke --function-name ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} output.json &> /dev/null
           cat output.json
