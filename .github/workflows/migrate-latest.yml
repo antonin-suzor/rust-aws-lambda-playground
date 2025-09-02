@@ -1,26 +1,76 @@
-name: Migrate to Latest Version of DB
+name: Build, Deploy, and Invoke Migration Lambda
 
 on:
   push:
     branches:
       - main
+      - migration_lambda_v2
   workflow_dispatch:
 
 jobs:
-  migrate-db:
+  build-and-deploy-lambda:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get Utility Executables
-        uses: ./.github/actions/get-util-execs
-      
-      - name: Show Current Migration Version
+      - name: Cache utility executables
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/cargo-lambda
+            ~/.cargo/bin/sqlx
+          key: util_exec_cargo-lambda_sqlx
+          restore-keys: |
+            util_exec
+
+      - name: Install utility executables if necessary
+        shell: bash
         run: |
-          sqlx migrate info --no-dotenv --source migrations --database-url ${{ secrets.DATABASE_URL }}
-      
-      - name: Migrate DB to Latest Version
+          if ! cargo lambda --version
+          then
+          cargo install cargo-lambda
+          fi
+          if ! sqlx --version
+          then
+          cargo install sqlx-cli
+          fi
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo
+
+      - name: Setup OpenSSL dependencies
         run: |
-          sqlx migrate run --no-dotenv --source migrations --database-url ${{ secrets.DATABASE_URL }}
+          echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
+          echo 'rustflags = ["-C", "target-cpu=neoverse-n1"]' >> ~/.cargo/config.toml
+
+      - name: Build Migration Lambda
+        working-directory: ./migrations
+        run: |
+          npm install -g @ziglang/cli
+          cargo lambda build --target aarch64-unknown-linux-gnu --release
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-north-1
+
+      - name: Deploy Migration Lambda to AWS
+        working-directory: ./migrations
+        run: |
+          cargo lambda deploy --include certs:../certs --include sql --binary-name migrations ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
+      
+      - name: Invoke AWS Lambda for Migration
+        run: curl -X POST https://${{ secrets.AWS_MIGRATION_LAMBDA_FUNCTION_URL }}
+
