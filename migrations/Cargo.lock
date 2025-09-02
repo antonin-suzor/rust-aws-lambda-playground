@@ -1241,6 +1241,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
 
 [[package]]
+name = "migrations"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "dotenvy",
+ "env_logger",
+ "lambda_http",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1646,20 +1658,6 @@ dependencies = [
  "spki",
  "subtle",
  "zeroize",
-]
-
-[[package]]
-name = "rust_aws_lambda"
-version = "0.1.0"
-dependencies = [
- "axum",
- "dotenvy",
- "env_logger",
- "lambda_http",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
 ]
 
 [[package]]

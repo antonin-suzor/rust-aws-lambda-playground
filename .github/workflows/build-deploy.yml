@@ -14,26 +14,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache utility executables
+      - name: Cache Cargo
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin/cargo-lambda
-            ~/.cargo/bin/sqlx
-          key: util_exec_cargo-lambda_sqlx
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+            **/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            util_exec
+            ${{ runner.os }}-cargo
 
-      - name: Install utility executables if necessary
+      - name: Install cargo lambda if necessary
         shell: bash
         run: |
           if ! cargo lambda --version
           then
           cargo install cargo-lambda
-          fi
-          if ! sqlx --version
-          then
-          cargo install sqlx-cli
           fi
 
       - name: Cache Cargo registry
