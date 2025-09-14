@@ -2,14 +2,14 @@
 
 use axum::{
     extract::{Path, State},
-    http::StatusCode,
     response::Json,
     routing::{get, patch},
     Router,
 };
 use serde::{Deserialize, Serialize};
-use std::fmt::Error;
 use sqlx::{FromRow, PgPool, Row};
+
+use crate::utils::{api_error_500, map_err_to_500, ApiError, JsonExtract};
 
 #[derive(Deserialize, FromRow, Serialize)]
 pub struct Todo {
@@ -49,18 +49,13 @@ impl From<Todo> for TodoDTO {
     }
 }
 
-type ServerError = (StatusCode, String);
-fn internal_server_error<E: std::error::Error>(err: E) -> ServerError {
-    (StatusCode::INTERNAL_SERVER_ERROR, err.to_string())
-}
-
 pub async fn get_api_todos(
 	State(db_pool): State<PgPool>,
-) -> Result<Json<Vec<Todo>>, ServerError> {
+) -> Result<Json<Vec<Todo>>, ApiError> {
 	let vec_todos = sqlx::query("SELECT * FROM todos;")
         .fetch_all(&db_pool)
         .await
-        .map_err(internal_server_error)?
+        .map_err(map_err_to_500)?
 		.iter().map(|row| {
 			let id: i32 = row.get("id");
 			let title: String = row.get("title");
@@ -72,27 +67,27 @@ pub async fn get_api_todos(
 }
 
 pub async fn post_api_todos(
-	State(db_pool): State<PgPool>, Json(todo): Json<TodoDTO>,
-) -> Result<Json<Todo>, ServerError> {
+	State(db_pool): State<PgPool>, JsonExtract(todo): JsonExtract<TodoDTO>,
+) -> Result<Json<Todo>, ApiError> {
     let q = sqlx::query("INSERT INTO todos (title, done) VALUES ($1, $2) RETURNING id;")
         .bind(todo.title.as_ref().map_or("", |s| s.as_ref()))
         .bind(todo.done.unwrap_or(false))
         .fetch_one(&db_pool).await
-        .map_err(internal_server_error)?;
+        .map_err(map_err_to_500)?;
 
 	Ok(Json(Todo::new(q.get("id"), todo)))
 }
 
 pub async fn patch_api_todos_id(
     Path(todo_id): Path<i32>,
-	State(db_pool): State<PgPool>, Json(mod_todo): Json<TodoDTO>,
-) -> Result<Json<Todo>, ServerError> {
+	State(db_pool): State<PgPool>, JsonExtract(mod_todo): JsonExtract<TodoDTO>,
+) -> Result<Json<Todo>, ApiError> {
     let mut todo = sqlx::query_as::<_, Todo>("SELECT * FROM todos WHERE id = $1;")
         .bind(todo_id)
         .fetch_optional(&db_pool)
         .await
-        .map_err(internal_server_error)?
-		.ok_or(internal_server_error(Error))?;
+        .map_err(map_err_to_500)?
+		.ok_or(api_error_500())?;
 
     todo.receive(mod_todo);
     sqlx::query(
@@ -103,7 +98,7 @@ pub async fn patch_api_todos_id(
     .bind(todo_id)
     .execute(&db_pool)
     .await
-    .map_err(internal_server_error)?;
+    .map_err(map_err_to_500)?;
     
 	Ok(Json(todo))
 }
@@ -111,16 +106,17 @@ pub async fn patch_api_todos_id(
 pub async fn delete_api_todos_id(
 	Path(todo_id): Path<i32>,
 	State(db_pool): State<PgPool>,
-) -> Result<(), ServerError> {
+) -> Result<(), ApiError> {
 	sqlx::query("DELETE FROM todos WHERE id = $1;")
 		.bind(todo_id)
 		.execute(&db_pool)
 		.await
-		.map_err(internal_server_error)?;
+		.map_err(map_err_to_500)?;
 	
 	Ok(())
 }
 
+/// Router for /api/todos
 pub fn get_todos_router() -> Router<PgPool> {
 	Router::new()
 		.route("/", get(get_api_todos).post(post_api_todos))

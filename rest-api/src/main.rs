@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sqlx::PgPool;
 
+mod auth;
+mod utils;
 mod todos;
 
 #[derive(Deserialize, Serialize)]
@@ -64,7 +66,9 @@ async fn main() -> Result<(), Error> {
         .route("/foo/{name}", post(post_foo_name))
         .route("/parameters", get(get_parameters))
         .route("/health", get(health_check))
-        .nest("/api/todos", todos::get_todos_router().with_state(db_pool));
+        .nest("/api/todos", todos::get_todos_router())
+        .nest("/api/auth", auth::get_auth_router())
+        .with_state(db_pool);
     
     run(app).await
 }
