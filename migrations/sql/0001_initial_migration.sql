@@ -1,8 +1,9 @@
--- Add up migration script here
-
 CREATE TABLE IF NOT EXISTS "todos"
 (
     "id" SERIAL PRIMARY KEY,
+    "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "deleted_at" TIMESTAMP,
     "title" TEXT NOT NULL,
     "done" BOOLEAN NOT NULL DEFAULT FALSE
 );

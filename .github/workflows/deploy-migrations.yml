@@ -1,9 +1,10 @@
-name: Build and Deploy Lambda
+name: Build, Deploy, and Invoke Migration Lambda
 
 on:
   push:
     branches:
       - main
+      - migration_lambda_v2
   workflow_dispatch:
 
 jobs:
@@ -14,26 +15,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Get Utility Executables
-        uses: ./.github/actions/get-util-execs
-
-      - name: Cache Cargo registry
+      - name: Cache Cargo
         uses: actions/cache@v4
         with:
           path: |
+            ~/.cargo/bin
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            **/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo
+
+      - name: Install cargo lambda if necessary
+        shell: bash
+        run: |
+          if ! cargo lambda --version
+          then
+          cargo install cargo-lambda
+          fi
 
       - name: Setup OpenSSL dependencies
         run: |
           echo '[target.aarch64-unknown-linux-gnu]' >> ~/.cargo/config.toml
           echo 'rustflags = ["-C", "target-cpu=neoverse-n1"]' >> ~/.cargo/config.toml
 
-      - name: Build Lambda
+      - name: Build Migration Lambda
+        working-directory: ./migrations
         run: |
           npm install -g @ziglang/cli
           cargo lambda build --target aarch64-unknown-linux-gnu --release
@@ -45,6 +53,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-north-1
 
-      - name: Deploy Lambda to AWS
+      - name: Deploy Migration Lambda to AWS
+        working-directory: ./migrations
         run: |
-          cargo lambda deploy --include certs --binary-name rust_aws_lambda lambda --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
+          cargo lambda deploy --include certs:../certs --include sql --binary-name migrations ${{ secrets.AWS_MIGRATION_LAMBDA_NAME }} --enable-function-url --description "$(git log -1 --format="%h - %H - %s")"
+      
+      - name: Invoke AWS Lambda for Migration
+        run: curl -X POST https://${{ secrets.AWS_MIGRATION_LAMBDA_FUNCTION_URL }}
+
